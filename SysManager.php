@@ -361,7 +361,7 @@ foreach (scandir(BASE_PATH . $file) as $object){
         </table>
 <?php 
 
-if(file_exists(BASE_PATH . $file . DS . 'readme.md') && file_exist('md-parser.php')){
+if(file_exists(BASE_PATH . $file . DS . 'readme.md') && file_exists('md-parser.php')){
     echo "<hr><h1>ReadMe:</h1>";
     include 'md-parser.php'; //Download from https://github.com/erusev/parsedown
     
