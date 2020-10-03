@@ -1,6 +1,6 @@
 <?php
 
-define('DONT_SHOW', array('.', '..', ".htaccess"));
+define('DONT_SHOW', array('.', '..', ".htaccess", "readme.md"));
 define('DS', DIRECTORY_SEPARATOR);
 define('BASE_PATH', __DIR__ . DS . "data" . DS);
 
@@ -150,10 +150,11 @@ if(isset($act) && $isLogged){
                 }
 
                 $targetDir = realpath($targetDir) . DS;
+                $override = $_POST['override'] ?? false;
 
                 for($i = 0; $i < count($_FILES["fileToUpload"]["size"]); $i++){
                     $targetFile = $targetDir . basename($_FILES["fileToUpload"]["name"][$i]);
-                    if(file_exists($targetFile))
+                    if((!$override && file_exists($targetFile)) || ($override && is_dir($targetFile)))
                         echo '<h1 align="center">File Already Exists! ('.htmlspecialchars(getFakePath($targetFile)).')<br> [<a href="?act=upload">go back</a>]</h1>';
                     else{
                         move_uploaded_file($_FILES['fileToUpload']["tmp_name"][$i], $targetFile);
@@ -179,6 +180,7 @@ if(isset($act) && $isLogged){
                     <script>function dis(event){dir=document.getElementById("dir");dir.disabled=event.checked;}</script>
                     <input type="file" name="fileToUpload[]" id="fileToUpload" multiple="multiple"><br><br>
                     <input type="checkbox" name="password" id="password" onclick="dis(this)"><label for="password">password dir</label><br><br>
+                    <input type="checkbox" name="override" id="override"><label for="override">Override</label><br><br>
                     dir: <input type="text" name="dir" id="dir" value="'.htmlspecialchars(getFakePath($name)).'"><br><br>
                     <input type="submit" value="Upload" name="submit">
                 </form>';
@@ -357,11 +359,26 @@ foreach (scandir(BASE_PATH . $file) as $object){
             </tr>
 <?php } ?>
         </table>
+<?php 
+
+if(file_exists(BASE_PATH . $file . DS . 'readme.md') && file_exist('md-parser.php')){
+    echo "<hr><h1>ReadMe:</h1>";
+    include 'md-parser.php'; //Download from https://github.com/erusev/parsedown
+    
+    $Parsedown = new Parsedown();
+    $Parsedown->setSafeMode(true);
+    
+    echo $Parsedown->text(file_get_contents(BASE_PATH . $file . DS . 'readme.md'));
+    
+    echo "<hr>";
+}
+?>
+        
     </body>
 </html>
 
 <?php }
-else if(file_exists(BASE_PATH . $file)){
+else if(file_exists(BASE_PATH . $file) && !in_array(basename($file), DONT_SHOW)){
     $file = BASE_PATH . $file;
     header("Content-type: application/x-download");
     header("Content-Length: ". filesize($file));
