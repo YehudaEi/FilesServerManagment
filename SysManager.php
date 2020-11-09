@@ -7,6 +7,7 @@ define('BASE_PATH', __DIR__ . DS . "data" . DS);
 if(file_exists(substr(BASE_PATH, 0, -1)) && !is_dir(substr(BASE_PATH, 0, -1))) die("<h1 style='color:red'>Fatal Error!<h1>");
 if(!is_dir(BASE_PATH)) mkdir(BASE_PATH);
 if(!file_exists(BASE_PATH . '.htaccess')) file_put_contents(BASE_PATH . '.htaccess', 'deny from all');
+if(!file_exists(__DIR__ . DS . '.htaccess')) file_put_contents(__DIR__ . DS . '.htaccess', "RewriteEngine on\nRewriteCond %{REQUEST_FILENAME} !-f\nRewriteCond %{REQUEST_FILENAME} !-d\nRewriteRule ^(.*)$ /SysManager.php?file=$1 [NC,L,QSA]");
 
 $users = array(
     "admin" => "admin@123",
@@ -373,7 +374,7 @@ if(file_exists(BASE_PATH . $file . DS . 'readme.md') && file_exists('md-parser.p
     echo "<hr>";
 }
 ?>
-        
+
     </body>
 </html>
 
