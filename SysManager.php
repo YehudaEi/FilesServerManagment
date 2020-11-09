@@ -3,6 +3,7 @@
 define('DONT_SHOW', array('.', '..', ".htaccess", "readme.md"));
 define('DS', DIRECTORY_SEPARATOR);
 define('BASE_PATH', __DIR__ . DS . "data" . DS);
+define('BASE_URL', ($_SERVER['REQUEST_SCHEME'] ?? ($_SERVER['HTTPS'] == "on" ? "https" : "http")) . "://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['SCRIPT_NAME']) . "/");
 
 if(file_exists(substr(BASE_PATH, 0, -1)) && !is_dir(substr(BASE_PATH, 0, -1))) die("<h1 style='color:red'>Fatal Error!<h1>");
 if(!is_dir(BASE_PATH)) mkdir(BASE_PATH);
@@ -76,7 +77,8 @@ function del($path){
     return false;
 }
 function getFakePath($path){
-    return cleanPath(substr($path, strlen(BASE_PATH)));
+    $res = cleanPath(substr($path, strlen(BASE_PATH)));
+    return empty($res) ? "/" : $res;
 }
 
 $file = cleanPath($_GET['file'] ?? "");
@@ -84,7 +86,7 @@ if(empty($file)) $file = "";
 
 if(isset($_GET['login']) || isset($_GET['logout'])){
     if(!isset($_GET['logout']) && isset($_SERVER['PHP_AUTH_USER']) && isset($_SERVER['PHP_AUTH_PW']) && isset($users[$_SERVER['PHP_AUTH_USER']]) && $users[$_SERVER['PHP_AUTH_USER']] == $_SERVER['PHP_AUTH_PW']){
-        header("location: /");
+        header('location: ' . BASE_URL);
     }
     else{
         header('WWW-Authenticate: Basic realm="Files Server Auth"');
@@ -108,28 +110,28 @@ if(isset($act) && $isLogged){
                 $newName = $file . DS . basename($_POST['name']);
 
                 if(file_exists($newName) || is_dir($newName)){
-                    echo '<h1 align="center">Location Already Exists! ('.htmlspecialchars($newName).')<br> [<a href="/">go back</a>]</h1>';
+                    echo '<h1 align="center">Location Already Exists! ('.htmlspecialchars($newName).')<br> [<a href="' . BASE_URL . '">go back</a>]</h1>';
                 }
                 else{
                     mkdir($newName);
                     if(is_dir($newName))
-                        echo '<h1 align="center">Create Success!<br> [<a href="/">go back</a>]</h1>';
+                        echo '<h1 align="center">Create Success!<br> [<a href="' . BASE_URL . '">go back</a>]</h1>';
                     else 
-                        echo '<h1 align="center">Create Failed!<br> [<a href="/">go back</a>]</h1>';
+                        echo '<h1 align="center">Create Failed!<br> [<a href="' . BASE_URL . '">go back</a>]</h1>';
                 }
             }
         }
         else{
-            echo "<p>Hello <b>" . htmlspecialchars($_SERVER['PHP_AUTH_USER']) . "</b>. [<a href='?logout'>logout</a>] [<a href='/'>home</a>]</p>";
+            echo "<p>Hello <b>" . htmlspecialchars($_SERVER['PHP_AUTH_USER']) . "</b>. [<a href='?logout'>logout</a>] [<a href=" . BASE_URL . ">home</a>]</p>";
             
             if(is_dir($file)){
                 $name = $file;
             }
             else{
-                header('location: /');
+                header('location: ' . BASE_URL);
             }
             echo '<form method="post" enctype="multipart/form-data"">
-                    path: <b>'.htmlspecialchars($name).'</b><br>
+                    path: <b>'.htmlspecialchars(getFakePath($name)).'</b><br>
                     name: <input type="text" name="name"><br><br>
                     <input type="submit" value="Create Folder" name="submit">
                 </form>';
@@ -169,13 +171,13 @@ if(isset($act) && $isLogged){
             }
         }
         else{
-            echo "<p>Hello <b>" . htmlspecialchars($_SERVER['PHP_AUTH_USER']) . "</b>. [<a href='?logout'>logout</a>] [<a href='/'>home</a>]</p>";
+            echo "<p>Hello <b>" . htmlspecialchars($_SERVER['PHP_AUTH_USER']) . "</b>. [<a href='?logout'>logout</a>] [<a href=" . BASE_URL . ">home</a>]</p>";
             
             if(is_dir($file)){
                 $name = $file;
             }
             else{
-                header('location: /');
+                header('location: ' . BASE_URL);
             }
             echo '<form method="post" enctype="multipart/form-data">
                     <script>function dis(event){dir=document.getElementById("dir");dir.disabled=event.checked;}</script>
@@ -195,35 +197,35 @@ if(isset($act) && $isLogged){
         
         if(isset($_POST['newName']) && $_POST['newName']){
             if(file_exists($oldName) || is_dir($oldName)){
-                if(!in_array(basename($oldName), DONT_SHOW) && $oldName != BASE_PATH){
+                if((!in_array(basename($oldName), DONT_SHOW) || basename($oldName) == 'readme.md') && $oldName != BASE_PATH){
                     $newName = dirname($oldName) . DS . basename($_POST['newName']);
 
                     if(file_exists($newName) || is_dir($newName)){
-                        echo '<h1 align="center">Location Already Exists! ('.htmlspecialchars($newName).')<br> [<a href="/">go back</a>]</h1>';
+                        echo '<h1 align="center">Location Already Exists! ('.htmlspecialchars($newName).')<br> [<a href="' . BASE_URL . '">go back</a>]</h1>';
                     }
                     else{
                         rename($oldName, $newName);
                         if(file_exists($newName) || is_dir($newName))
-                            echo '<h1 align="center">Rename Success!<br> [<a href="/">go back</a>]</h1>';
+                            echo '<h1 align="center">Rename Success!<br> [<a href="' . BASE_URL . '">go back</a>]</h1>';
                         else 
-                            echo '<h1 align="center">Rename Failed!<br> [<a href="/">go back</a>]</h1>';
+                            echo '<h1 align="center">Rename Failed!<br> [<a href="' . BASE_URL . '">go back</a>]</h1>';
                     }
                 }
                 else
-                    echo '<h1 align="center">Error!<br> [<a href="/">go back</a>]</h1>';
+                    echo '<h1 align="center">Error!<br> [<a href="' . BASE_URL . '">go back</a>]</h1>';
             }
         }
         else{
-            echo "<p>Hello <b>" . htmlspecialchars($_SERVER['PHP_AUTH_USER']) . "</b>. [<a href='?logout'>logout</a>] [<a href='/'>home</a>]</p>";
+            echo "<p>Hello <b>" . htmlspecialchars($_SERVER['PHP_AUTH_USER']) . "</b>. [<a href='?logout'>logout</a>] [<a href=" . BASE_URL . ">home</a>]</p>";
             
             if(file_exists($oldName) || is_dir($oldName)){
                 $name = $oldName;
             }
             else{
-                header('location: /');
+                header('location: ' . BASE_URL);
             }
             echo '<form method="post" enctype="multipart/form-data"">
-                    path: <b>'.htmlspecialchars($name).'</b><br>
+                    path: <b>'.htmlspecialchars(getFakePath($name)).'</b><br>
                     new name: <input type="text" name="newName" value="'.htmlspecialchars(basename($name)).'"><br><br>
                     <input type="submit" value="ChangeName" name="submit">
                 </form>';
@@ -234,28 +236,28 @@ if(isset($act) && $isLogged){
         
         if(isset($_POST['delete']) && $_POST['delete']){
             if(file_exists($file) || is_dir($file)){
-                if(!in_array(basename($file), DONT_SHOW) && $file != BASE_PATH){
+                if((!in_array(basename($file), DONT_SHOW) || basename($file) == 'readme.md') && $file != BASE_PATH){
                     del($file);
                     if(!file_exists($file))
-                        echo '<h1 align="center">Delete Success!<br> [<a href="/">go back</a>]</h1>';
+                        echo '<h1 align="center">Delete Success!<br> [<a href="' . BASE_URL . '">go back</a>]</h1>';
                     else 
-                        echo '<h1 align="center">Delete Failed!<br> [<a href="/">go back</a>]</h1>';
+                        echo '<h1 align="center">Delete Failed!<br> [<a href="' . BASE_URL . '">go back</a>]</h1>';
                 }
                 else
-                    echo '<h1 align="center">Error!<br> [<a href="/">go back</a>]</h1>';
+                    echo '<h1 align="center">Error!<br> [<a href="' . BASE_URL . '">go back</a>]</h1>';
             }
         }
         else{
-            echo "<p>Hello <b>" . htmlspecialchars($_SERVER['PHP_AUTH_USER']) . "</b>. [<a href='?logout'>logout</a>] [<a href='/'>home</a>]</p>";
+            echo "<p>Hello <b>" . htmlspecialchars($_SERVER['PHP_AUTH_USER']) . "</b>. [<a href='?logout'>logout</a>] [<a href=" . BASE_URL . ">home</a>]</p>";
             
             if(file_exists($file) || is_dir($file)){
                 $name = $file;
             }
             else{
-                header('location: /');
+                header('location: ' . BASE_URL);
             }
             echo '<form method="post" enctype="multipart/form-data" onsubmit="return confirm(\'Yes I\\\'m totally sure\');">
-                    <input type="checkbox" name="delete" id="delete"><label for="delete">Yes I\'m sure I want to delete <b>'.htmlspecialchars($name).'</b></label><br><br>
+                    <input type="checkbox" name="delete" id="delete"><label for="delete">Yes I\'m sure I want to delete <b>'.htmlspecialchars(getFakePath($name)).'</b></label><br><br>
                     <input type="submit" value="Delete" name="submit">
                 </form>';
         }
@@ -269,7 +271,7 @@ if(isset($act) && $isLogged){
     </head>
     <body>
         <h1>Not Found</h1>
-        <h3><a href="/">Go Back</a></h3>
+        <h3><a href="<?php echo BASE_URL;?>">Go Back</a></h3>
     </body>
 </html>
 <?php
@@ -286,10 +288,10 @@ if(is_dir(BASE_PATH . $file)){
     </head>
     <body>
     <?php if($isLogged) echo "<p>Hello <b>" . htmlspecialchars($_SERVER['PHP_AUTH_USER']) . "</b>. 
-        [<a href='/?logout'>logout</a>] 
-        [<a href='/".$file."?act=upload'>upload</a>] 
-        [<a href='/?act=password'>password files</a>] 
-        [<a href='/".$file."?act=folder'>create folder</a>] 
+        [<a href='?logout'>logout</a>] 
+        [<a href='" . BASE_URL . $file . "?act=upload'>upload</a>] 
+        [<a href='" . BASE_URL . "?act=password'>password files</a>] 
+        [<a href='" . BASE_URL . $file . "?act=folder'>create folder</a>] 
     </p>
     "; ?>
         <table border='1'>
@@ -309,7 +311,7 @@ if(is_dir(BASE_PATH . $file)){
 if(!empty($file)){
     ?>
         <tr>
-            <td><a href='/'>Go Back</a></td>
+            <td><a href='<?php echo BASE_URL;?>'>Go Back</a></td>
             <td>-</td>
             <td>-</td>
         <?php if($isLogged){ ?>
@@ -324,7 +326,7 @@ if(!empty($file)){
 elseif(!$isLogged){
     ?>
         <tr>
-            <td><a href='?login'>Login</a></td>
+            <td><a href='<?php echo BASE_URL;?>?login'>Login</a></td>
             <td>-</td>
             <td>-</td>
         </tr>
@@ -338,7 +340,7 @@ foreach (scandir(BASE_PATH . $file) as $object){
     if(in_array($name, DONT_SHOW) && (!$isLogged || $name != 'readme.md')) continue;
 
     $htmlName = htmlspecialchars($name);
-    $link = "/" . getFakePath($object);
+    $link = BASE_URL . getFakePath($object);
     $lastMod = date('d/m/Y H:i', filemtime($object));
     
     if(is_dir($object))
@@ -396,7 +398,7 @@ else{
     </head>
     <body>
         <h1>Not Found</h1>
-        <h3><a href="/">Go Back</a></h3>
+        <h3><a href="<?php echo BASE_URL;?>">Go Back</a></h3>
     </body>
 </html>
 <?php
