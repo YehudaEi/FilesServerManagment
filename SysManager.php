@@ -335,7 +335,7 @@ foreach (scandir(BASE_PATH . $file) as $object){
     $object = BASE_PATH . $file . DS .  $object;
     $name = basename($object);
     
-    if(in_array($name, DONT_SHOW)) continue;
+    if(in_array($name, DONT_SHOW) && (!$isLogged || $name != 'readme.md')) continue;
 
     $htmlName = htmlspecialchars($name);
     $link = "/" . getFakePath($object);
@@ -379,7 +379,7 @@ if(file_exists(BASE_PATH . $file . DS . 'readme.md') && file_exists('md-parser.p
 </html>
 
 <?php }
-else if(file_exists(BASE_PATH . $file) && !in_array(basename($file), DONT_SHOW)){
+else if(file_exists(BASE_PATH . $file) && (!in_array(basename($file), DONT_SHOW) || ($isLogged && basename($file) == 'readme.md'))){
     $file = BASE_PATH . $file;
     header("Content-type: application/x-download");
     header("Content-Length: ". filesize($file));
@@ -401,5 +401,4 @@ else{
 </html>
 <?php
 }
-
 
