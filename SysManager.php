@@ -5,13 +5,16 @@ define('DS', DIRECTORY_SEPARATOR);
 define('BASE_PATH', __DIR__ . DS . "data" . DS);
 define('BASE_URL', ($_SERVER['REQUEST_SCHEME'] ?? ($_SERVER['HTTPS'] == "on" ? "https" : "http")) . "://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['SCRIPT_NAME']) . "/");
 
+session_name('FileServerMng');
+session_start();
+
 if(file_exists(substr(BASE_PATH, 0, -1)) && !is_dir(substr(BASE_PATH, 0, -1))) die("<h1 style='color:red'>Fatal Error!<h1>");
 if(!is_dir(BASE_PATH)) mkdir(BASE_PATH);
 if(!file_exists(BASE_PATH . '.htaccess')) file_put_contents(BASE_PATH . '.htaccess', 'deny from all');
 if(!file_exists(__DIR__ . DS . '.htaccess')) file_put_contents(__DIR__ . DS . '.htaccess', "RewriteEngine on\nRewriteCond %{REQUEST_FILENAME} !-f\nRewriteCond %{REQUEST_FILENAME} !-d\nRewriteRule ^(.*)$ /SysManager.php?file=$1 [NC,L,QSA]");
 
-$users = array(
-    "admin" => "admin@123",
+$users =  array(
+    'admin' => password_hash('admin@123', PASSWORD_DEFAULT),
 );
 $isLogged = false;
 
@@ -84,20 +87,48 @@ function getFakePath($path){
 $file = cleanPath($_GET['file'] ?? "");
 if(empty($file)) $file = "";
 
-if(isset($_GET['login']) || isset($_GET['logout'])){
-    if(!isset($_GET['logout']) && isset($_SERVER['PHP_AUTH_USER']) && isset($_SERVER['PHP_AUTH_PW']) && isset($users[$_SERVER['PHP_AUTH_USER']]) && $users[$_SERVER['PHP_AUTH_USER']] == $_SERVER['PHP_AUTH_PW']){
+if(isset($_GET['logout'])){ 
+    unset($_SESSION['FileServerMngUser']['logged']); 
+    header('location: ' . BASE_URL);
+}
+if (isset($_SESSION['FileServerMngUser']['logged'], $users[$_SESSION['FileServerMngUser']['logged']])){
+    $isLogged = true;
+}
+if(isset($_GET['login'])){ 
+    if (isset($_POST['user'], $_POST['pass'])) {
+        if (isset($users[$_POST['user']]) && isset($_POST['pass']) && password_verify($_POST['pass'], $users[$_POST['user']])) {
+            $_SESSION['FileServerMngUser']['logged'] = $_POST['user'];
+        } else {
+            unset($_SESSION['FileServerMngUser']['logged']);
+            $_SESSION['FileServerMngMessage'] = "<h2 style='color:red;'>Error Credentials :(</h2>";
+        }
         header('location: ' . BASE_URL);
     }
-    else{
-        header('WWW-Authenticate: Basic realm="Files Server Auth"');
-        header('HTTP/1.0 401 Unauthorized');
-        echo '<span>You do not have permission to view this page!<br><button onclick="location.reload();">Click here to try again</button></span><br>[<a href="/">go back</a>]';
+    else {
+        unset($_SESSION['FileServerMngUser']['logged']);
+        $message = $_SESSION['FileServerMngMessage'] ?? "";
+        $_SESSION['FileServerMngMessage'] = "";
+        echo '
+        <html>
+            <head>
+                <title>Yehuda\'s Files Server 😉 | Login</title>
+                <script>console.log("%c‎E‎v‎e‎r‎y‎t‎h‎i‎n‎g‎ ‎i‎s‎ ‎p‎r‎otected‎,‎ ‎y‎o‎u‎ ‎w‎i‎l‎l‎ f‎i‎n‎d‎ ‎n‎o‎t‎h‎i‎n‎g‎ ‎h‎e‎r‎e‎ ‎😁‎", "color:red;font-size:30px;font-weight:bold;")</script>
+            </head>
+            <body>
+                <div align="center">
+                    <h1>Login - Files Server</h1>
+                    ' . $message . '
+                    <form method="POST">
+                        <input type="text" name="user" placeholder="Username"><br><br>
+                        <input type="password" name="pass" placeholder="Password"><br><br>
+                        <button type="submit">Login</button>
+                    </form>
+                </div>
+            </body>
+        </html>';
     }
     die();
 }
-
-if(isset($_SERVER['PHP_AUTH_USER']) && isset($_SERVER['PHP_AUTH_PW']) && isset($users[$_SERVER['PHP_AUTH_USER']]) && $users[$_SERVER['PHP_AUTH_USER']] == $_SERVER['PHP_AUTH_PW'])
-    $isLogged = true;
 
 
 $act = $_GET['act'] ?? null;
