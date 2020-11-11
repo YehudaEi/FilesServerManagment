@@ -9,7 +9,7 @@ files server managment in one file
 
 
 ## Contact
-[fileserver@yehudae.net](mailto:fileserver@yehudae.net)
+[FilesServer@yehudae.net](mailto:FilesServer@yehudae.net)
 
 ## License
 AGPL-3.0
