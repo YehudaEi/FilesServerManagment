@@ -14,7 +14,7 @@ if(!is_dir(BASE_PATH)) mkdir(BASE_PATH);
 if(!is_dir(BASE_PATH_SF)) mkdir(BASE_PATH_SF);
 if(!file_exists(BASE_PATH . '.htaccess')) file_put_contents(BASE_PATH . '.htaccess', 'deny from all');
 if(!file_exists(BASE_PATH_SF . '.htaccess')) file_put_contents(BASE_PATH_SF . '.htaccess', 'deny from all');
-if(!file_exists(__DIR__ . DS . '.htaccess')) file_put_contents(__DIR__ . DS . '.htaccess', "DirectoryIndex index.php\nRewriteEngine on\nRewriteCond %{REQUEST_FILENAME} !-f\nRewriteCond %{REQUEST_FILENAME} !-d\nRewriteRule ^(.*)$ /SysManager.php?file=$1 [NC,L,QSA]");
+if(!file_exists(__DIR__ . DS . '.htaccess')) file_put_contents(__DIR__ . DS . '.htaccess', "DirectoryIndex SysManager.php\nRewriteEngine on\nRewriteCond %{REQUEST_FILENAME} !-f\nRewriteCond %{REQUEST_FILENAME} !-d\nRewriteRule ^(.*)$ /SysManager.php?file=$1 [NC,L,QSA]");
 
 $users =  array(
     'admin' => password_hash('admin@123', PASSWORD_DEFAULT),
