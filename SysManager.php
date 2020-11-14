@@ -5,6 +5,7 @@ define('DS', DIRECTORY_SEPARATOR);
 define('BASE_PATH', __DIR__ . DS . "data" . DS);
 define('BASE_PATH_SF', __DIR__ . DS . "Secret-Folder" . DS);
 define('BASE_URL', ($_SERVER['REQUEST_SCHEME'] ?? ($_SERVER['HTTPS'] == "on" ? "https" : "http")) . "://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['SCRIPT_NAME']) . "/");
+define('SERVER_NAME', "Yehuda's Files Server 😉");
 define('DB_MODE', false);
 if(DB_MODE){
     define('DB_AUTH', array('host' => 'localhost', 'username' => 'root', 'password' => '', 'dbname' => 'FileServer'));
@@ -90,6 +91,21 @@ function getFakePath($path, $secretMode){
     $res = cleanPath(substr($path, strlen($secretMode ? BASE_PATH_SF : BASE_PATH)));
     return empty($res) ? "/" : $res;
 }
+function printHtmlHeadAndFoobar($mode, $path = null, $title = null){
+    if($mode == 1){
+        echo '<html>
+    <head>
+        <title>' . SERVER_NAME . ' | ' . ($title ?? (empty($path) ? "home" : $path)) . '</title>
+    </head>
+    <body>
+';
+    }
+    elseif($mode == 2){
+        echo '
+    </body>
+</html>';
+    }
+}
 function printHeader($path, $secretMode = false){
     echo "<p>Hello <b>" . htmlspecialchars($_SESSION['FileServerMngUser']['logged']) . "</b>. 
         [<a href='" . BASE_URL . "'>home</a>] 
@@ -103,13 +119,7 @@ function printHeader($path, $secretMode = false){
 }
 function printFilesTable($path, $isLogged, $secretMode = false){
 ?>
-
-<html>
-    <head>
-        <title>Yehuda's Files Server 😉 | <?php echo empty($path) ? "home" : $path; ?></title>
-        <script>console.log("%c‎E‎v‎e‎r‎y‎t‎h‎i‎n‎g‎ ‎i‎s‎ ‎p‎r‎otected‎,‎ ‎y‎o‎u‎ ‎w‎i‎l‎l‎ f‎i‎n‎d‎ ‎n‎o‎t‎h‎i‎n‎g‎ ‎h‎e‎r‎e‎ ‎😁‎", "color:red;font-size:30px;font-weight:bold;")</script>
-    </head>
-    <body>
+<?php printHtmlHeadAndFoobar(1, $path); ?>
     <?php if($isLogged) printHeader($path, $secretMode); ?>
         <table border='1'>
             <tr>
@@ -209,10 +219,8 @@ if(file_exists(($secretMode ? BASE_PATH_SF : BASE_PATH) . $path . DS . 'readme.m
     echo "<hr>";
 }
 ?>
-
-    </body>
-</html>
 <?php
+    printHtmlHeadAndFoobar(2);
 }
 
 $file = cleanPath($_GET['file'] ?? "");
@@ -239,24 +247,18 @@ if(isset($_GET['login'])){
         unset($_SESSION['FileServerMngUser']['logged']);
         $message = $_SESSION['FileServerMngMessage'] ?? "";
         $_SESSION['FileServerMngMessage'] = "";
+        printHtmlHeadAndFoobar(1, null, "Login");
         echo '
-        <html>
-            <head>
-                <title>Yehuda\'s Files Server 😉 | Login</title>
-                <script>console.log("%c‎E‎v‎e‎r‎y‎t‎h‎i‎n‎g‎ ‎i‎s‎ ‎p‎r‎otected‎,‎ ‎y‎o‎u‎ ‎w‎i‎l‎l‎ f‎i‎n‎d‎ ‎n‎o‎t‎h‎i‎n‎g‎ ‎h‎e‎r‎e‎ ‎😁‎", "color:red;font-size:30px;font-weight:bold;")</script>
-            </head>
-            <body>
-                <div align="center">
-                    <h1>Login - Files Server</h1>
-                    ' . $message . '
-                    <form method="POST">
-                        <input type="text" name="user" placeholder="Username"><br><br>
-                        <input type="password" name="pass" placeholder="Password"><br><br>
-                        <button type="submit">Login</button>
-                    </form>
-                </div>
-            </body>
-        </html>';
+        <div align="center">
+            <h1>Login - Files Server</h1>
+            ' . $message . '
+            <form method="POST">
+                <input type="text" name="user" placeholder="Username"><br><br>
+                <input type="password" name="pass" placeholder="Password"><br><br>
+                <button type="submit">Login</button>
+            </form>
+        </div>';
+        printHtmlHeadAndFoobar(2);
     }
     die();
 }
@@ -291,12 +293,14 @@ if(isset($act) && $isLogged){
             else{
                 header('location: ' . BASE_URL);
             }
+            printHtmlHeadAndFoobar(1, null, "Create folder in \"" . htmlspecialchars(getFakePath($name, $secretMode)) . "\"");
             printHeader(getFakePath($file, $secretMode), $secretMode);
             echo '<form method="post" enctype="multipart/form-data"">
                     path: <b>'.htmlspecialchars(getFakePath($name, $secretMode)).'</b><br>
                     name: <input type="text" name="name"><br><br>
                     <input type="submit" value="Create Folder" name="submit">
                 </form>';
+            printHtmlHeadAndFoobar(2);
         }
     }
     elseif($act == "upload"){
@@ -339,6 +343,7 @@ if(isset($act) && $isLogged){
             else{
                 header('location: ' . BASE_URL);
             }
+            printHtmlHeadAndFoobar(1, null, "Upload files in \"" . htmlspecialchars(getFakePath($name, $secretMode)) . "\"");
             printHeader(getFakePath($file, $secretMode), $secretMode);
             echo '<form method="post" enctype="multipart/form-data">
                     <script>function dis(event){dir=document.getElementById("dir");dir.disabled=event.checked;}</script>
@@ -348,6 +353,7 @@ if(isset($act) && $isLogged){
                     dir: <input type="text" name="dir" id="dir" value="'.htmlspecialchars(getFakePath($name, $secretMode)).'"><br><br>
                     <input type="submit" value="Upload" name="submit">
                 </form>';
+            printHtmlHeadAndFoobar(2);
         }
     }
     elseif($act == "secret"){
@@ -388,12 +394,14 @@ if(isset($act) && $isLogged){
             else{
                 header('location: ' . BASE_URL);
             }
+            printHtmlHeadAndFoobar(1, null, "Reaname \"" . htmlspecialchars(getFakePath($name, $secretMode)) . "\"");
             printHeader((is_dir($name) ? getFakePath($name, $secretMode) : getFakePath(dirname($name), $secretMode)), $secretMode);
             echo '<form method="post" enctype="multipart/form-data"">
                     path: <b>'.htmlspecialchars(getFakePath($name, $secretMode)).'</b><br>
                     new name: <input type="text" name="newName" value="'.htmlspecialchars(basename($name)).'"><br><br>
                     <input type="submit" value="ChangeName" name="submit">
                 </form>';
+            printHtmlHeadAndFoobar(2);
         }
     }
     elseif($act == "delete"){
@@ -419,11 +427,13 @@ if(isset($act) && $isLogged){
             else{
                 header('location: ' . BASE_URL);
             }
+            printHtmlHeadAndFoobar(1, null, "Delete \"" . htmlspecialchars(getFakePath($name, $secretMode)) . "\"");
             printHeader((is_dir($file) ? getFakePath($file, $secretMode) : getFakePath(dirname($file), $secretMode)), $secretMode);
             echo '<form method="post" enctype="multipart/form-data" onsubmit="return confirm(\'Yes I\\\'m totally sure\');">
                     <input type="checkbox" name="delete" id="delete"><label for="delete">Yes I\'m sure I want to delete <b>'.htmlspecialchars(getFakePath($name, $secretMode)).'</b></label><br><br>
                     <input type="submit" value="Delete" name="submit">
                 </form>';
+            printHtmlHeadAndFoobar(2);
         }
     }
     elseif($act == "stats" && DB_MODE){
@@ -434,6 +444,8 @@ if(isset($act) && $isLogged){
         else{
             header('location: ' . BASE_URL);
         }
+
+        printHtmlHeadAndFoobar(1, null, "Stats of \"" . htmlspecialchars(getFakePath($name, $secretMode)) . "\"");
         printHeader(getFakePath($file, $secretMode), $secretMode);
         $DBConn = new mysqli(DB_AUTH['host'], DB_AUTH['username'], DB_AUTH['password'], DB_AUTH['dbname']);
         if($DBConn == false || empty($DBConn) || $DBConn->connect_error){}
@@ -444,13 +456,13 @@ if(isset($act) && $isLogged){
             echo "<p><a href='" . BASE_URL . "'>go back</a></p>";
             $DBConn->close();
         }
+        printHtmlHeadAndFoobar(2);
     }
     else{
 ?>
 <html>
     <head>
-        <title>Yehuda's Files Server 😉</title>
-        <script>console.log("%c‎E‎v‎e‎r‎y‎t‎h‎i‎n‎g‎ ‎i‎s‎ ‎p‎r‎otected‎,‎ ‎y‎o‎u‎ ‎w‎i‎l‎l‎ f‎i‎n‎d‎ ‎n‎o‎t‎h‎i‎n‎g‎ ‎h‎e‎r‎e‎ ‎😁‎", "color:red;font-size:30px;font-weight:bold;")</script>
+        <title><?php echo SERVER_NAME; ?> | Not Found</title>
     </head>
     <body>
         <h1>Not Found</h1>
@@ -489,8 +501,7 @@ else{
 ?>
 <html>
     <head>
-        <title>Yehuda's Files Server 😉</title>
-        <script>console.log("%c‎E‎v‎e‎r‎y‎t‎h‎i‎n‎g‎ ‎i‎s‎ ‎p‎r‎otected‎,‎ ‎y‎o‎u‎ ‎w‎i‎l‎l‎ f‎i‎n‎d‎ ‎n‎o‎t‎h‎i‎n‎g‎ ‎h‎e‎r‎e‎ ‎😁‎", "color:red;font-size:30px;font-weight:bold;")</script>
+        <title><?php echo SERVER_NAME; ?> | Not Found</title>
     </head>
     <body>
         <h1>Not Found</h1>
