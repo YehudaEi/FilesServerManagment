@@ -5,6 +5,10 @@ define('DS', DIRECTORY_SEPARATOR);
 define('BASE_PATH', __DIR__ . DS . "data" . DS);
 define('BASE_PATH_SF', __DIR__ . DS . "Secret-Folder" . DS);
 define('BASE_URL', ($_SERVER['REQUEST_SCHEME'] ?? ($_SERVER['HTTPS'] == "on" ? "https" : "http")) . "://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['SCRIPT_NAME']) . "/");
+define('DB_MODE', false);
+if(DB_MODE){
+    define('DB_AUTH', array('host' => 'localhost', 'username' => 'root', 'password' => '', 'dbname' => 'FileServer'));
+}
 
 session_name('FileServerMng');
 session_start();
@@ -116,6 +120,11 @@ function printFilesTable($path, $isLogged, $secretMode = false){
 
                 <th>ReName</th>
                 <th>Delete</th>
+                
+                <?php if(DB_MODE){ ?>
+                
+                <th>Stats</th>
+                <?php } ?>
             <?php } ?>
 
             </tr>
@@ -131,6 +140,10 @@ if(!empty($path)){
 
             <th>-</th>
             <th>-</th>
+            <?php if(DB_MODE){ ?>
+                
+            <th>Stats</th>
+            <?php } ?>
         <?php } ?>
 
         </tr>
@@ -168,8 +181,15 @@ foreach (scandir(($secretMode ? BASE_PATH_SF : BASE_PATH) . $path) as $object){
                 <td><?php echo $size; ?></td>
             <?php if($isLogged) { ?>
             
-                <th><a href='<?php echo $link; ?>?act=rename'>ReName this file / folder</a></th>
-                <th><a href='<?php echo $link; ?>?act=delete'>Delete this file / folder</a></th>
+                <td><a href='<?php echo $link; ?>?act=rename'>ReName this file / folder</a></td>
+                <td><a href='<?php echo $link; ?>?act=delete'>Delete this file / folder</a></td>
+                <?php if(DB_MODE && !is_dir($object)){ ?>
+                
+                <td><a href='<?php echo $link; ?>?act=stats'>Stats of downloads</a></td>
+                <?php } else { ?>
+                
+                <td><i style='margin-left:4px;'>folder</i></td>
+                <?php } ?>
             <?php } ?>
             
             </tr>
@@ -406,6 +426,9 @@ if(isset($act) && $isLogged){
                 </form>';
         }
     }
+    elseif($act == "stats"){
+        die("In Building...");
+    }
     else{
 ?>
 <html>
@@ -428,6 +451,18 @@ if(is_dir(($secretMode ? BASE_PATH_SF : BASE_PATH) . $file)){
 }
 else if(file_exists(($secretMode ? BASE_PATH_SF : BASE_PATH) . $file) && (!in_array(basename($file), DONT_SHOW) || ($isLogged && basename($file) == 'readme.md'))){
     $file = ($secretMode ? BASE_PATH_SF : BASE_PATH) . $file;
+    
+    if(DB_MODE){
+        $DBConn = new mysqli(DB_AUTH['host'], DB_AUTH['username'], DB_AUTH['password'], DB_AUTH['dbname']);
+        if($DBConn == false || empty($DBConn) || $DBConn->connect_error){}
+        else{
+            $DBConn->set_charset = "utf8mb4";
+            $DBConn->query("CREATE TABLE IF NOT EXIST `test`.`downloads` ( `id` INT NOT NULL AUTO_INCREMENT , `path` TEXT NOT NULL , `username` TEXT NOT NULL , `ip` TEXT NOT NULL , `user_agent` TEXT NOT NULL , `referer` TEXT NOT NULL , `language` TEXT NOT NULL , `time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP , PRIMARY KEY (`id`)) ENGINE = InnoDB CHARSET=utf8mb4 COLLATE utf8mb4_general_ci;");
+            $DBConn->query("INSERT INTO `downloads` (`id`, `path`, `username`, `ip`, `user_agent`, `referer`, `language`, `time`) VALUES (NULL, '" . $DBConn->real_escape_string($file) . "', '" . $DBConn->real_escape_string($_SESSION['FileServerMngUser']['logged']) . "', '" . $DBConn->real_escape_string($_SERVER['REMOTE_ADDR']) . "', '" . $DBConn->real_escape_string($_SERVER['HTTP_USER_AGENT']) . "', '" . $DBConn->real_escape_string($_SERVER['HTTP_REFERER']) . "', '" . $DBConn->real_escape_string($_SERVER['HTTP_ACCEPT_LANGUAGE']) . "', CURRENT_TIMESTAMP);");
+            $DBConn->close();
+        }
+    }
+    
     header("Content-type: application/x-download");
     header("Content-Length: ". filesize($file));
     header("Content-Disposition: attachment; filename=\"" . basename($file) . "\"");
