@@ -388,7 +388,7 @@ if(isset($act) && $isLogged){
             else{
                 header('location: ' . BASE_URL);
             }
-            printHeader((is_dir($name) ? getFakePath($name, $secretMode) : getFakePath(dirname($name))), $secretMode);
+            printHeader((is_dir($name) ? getFakePath($name, $secretMode) : getFakePath(dirname($name), $secretMode)), $secretMode);
             echo '<form method="post" enctype="multipart/form-data"">
                     path: <b>'.htmlspecialchars(getFakePath($name, $secretMode)).'</b><br>
                     new name: <input type="text" name="newName" value="'.htmlspecialchars(basename($name)).'"><br><br>
