@@ -186,7 +186,7 @@ foreach (scandir(($secretMode ? BASE_PATH_SF : BASE_PATH) . $path) as $object){
                 <?php if(DB_MODE && !is_dir($object)){ ?>
                 
                 <td><a href='<?php echo $link; ?>?act=stats'>Stats of downloads</a></td>
-                <?php } else { ?>
+                <?php } elseif(DB_MODE) { ?>
                 
                 <td><i style='margin-left:4px;'>folder</i></td>
                 <?php } ?>
