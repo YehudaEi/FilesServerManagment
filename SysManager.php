@@ -388,7 +388,7 @@ if(isset($act) && $isLogged){
             else{
                 header('location: ' . BASE_URL);
             }
-            printHeader((is_dir($file) ? getFakePath($file, $secretMode) : getFakePath(dirname($file))), $secretMode);
+            printHeader((is_dir($name) ? getFakePath($name, $secretMode) : getFakePath(dirname($name))), $secretMode);
             echo '<form method="post" enctype="multipart/form-data"">
                     path: <b>'.htmlspecialchars(getFakePath($name, $secretMode)).'</b><br>
                     new name: <input type="text" name="newName" value="'.htmlspecialchars(basename($name)).'"><br><br>
@@ -426,8 +426,24 @@ if(isset($act) && $isLogged){
                 </form>';
         }
     }
-    elseif($act == "stats"){
-        die("In Building...");
+    elseif($act == "stats" && DB_MODE){
+        $file = ($secretMode ? BASE_PATH_SF : BASE_PATH) . $file;
+        if(!is_dir($file)){
+            $name = $file;
+        }
+        else{
+            header('location: ' . BASE_URL);
+        }
+        printHeader(getFakePath($file, $secretMode), $secretMode);
+        $DBConn = new mysqli(DB_AUTH['host'], DB_AUTH['username'], DB_AUTH['password'], DB_AUTH['dbname']);
+        if($DBConn == false || empty($DBConn) || $DBConn->connect_error){}
+        else{
+            $DBConn->set_charset = "utf8mb4";
+            $data = $DBConn->query("SELECT * FROM `downloads` WHERE `path` = '" . $DBConn->real_escape_string($file) . "';");
+            echo "<p>Number of downloads: {$data->num_rows}</p>";
+            echo "<p><a href='" . BASE_URL . "'>go back</a></p>";
+            $DBConn->close();
+        }
     }
     else{
 ?>
@@ -457,7 +473,7 @@ else if(file_exists(($secretMode ? BASE_PATH_SF : BASE_PATH) . $file) && (!in_ar
         if($DBConn == false || empty($DBConn) || $DBConn->connect_error){}
         else{
             $DBConn->set_charset = "utf8mb4";
-            $DBConn->query("CREATE TABLE IF NOT EXIST `test`.`downloads` ( `id` INT NOT NULL AUTO_INCREMENT , `path` TEXT NOT NULL , `username` TEXT NOT NULL , `ip` TEXT NOT NULL , `user_agent` TEXT NOT NULL , `referer` TEXT NOT NULL , `language` TEXT NOT NULL , `time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP , PRIMARY KEY (`id`)) ENGINE = InnoDB CHARSET=utf8mb4 COLLATE utf8mb4_general_ci;");
+            $DBConn->query("CREATE TABLE IF NOT EXIST `downloads` ( `id` INT NOT NULL AUTO_INCREMENT , `path` TEXT NOT NULL , `username` TEXT NOT NULL , `ip` TEXT NOT NULL , `user_agent` TEXT NOT NULL , `referer` TEXT NOT NULL , `language` TEXT NOT NULL , `time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP , PRIMARY KEY (`id`)) ENGINE = InnoDB CHARSET=utf8mb4 COLLATE utf8mb4_general_ci;");
             $DBConn->query("INSERT INTO `downloads` (`id`, `path`, `username`, `ip`, `user_agent`, `referer`, `language`, `time`) VALUES (NULL, '" . $DBConn->real_escape_string($file) . "', '" . $DBConn->real_escape_string($_SESSION['FileServerMngUser']['logged']) . "', '" . $DBConn->real_escape_string($_SERVER['REMOTE_ADDR']) . "', '" . $DBConn->real_escape_string($_SERVER['HTTP_USER_AGENT']) . "', '" . $DBConn->real_escape_string($_SERVER['HTTP_REFERER']) . "', '" . $DBConn->real_escape_string($_SERVER['HTTP_ACCEPT_LANGUAGE']) . "', CURRENT_TIMESTAMP);");
             $DBConn->close();
         }
@@ -483,4 +499,3 @@ else{
 </html>
 <?php
 }
-
