@@ -1,6 +1,5 @@
-# FilesServerManagment
-files server managment in one file
-
+# File Server Managment
+File server managment in one file!
 
 ## Install:
 1. copy ```SysManager.php``` to your server
@@ -16,5 +15,11 @@ If you are interested in file download statistics, follow these steps:
 ## Contact
 [FilesServer@yehudae.net](mailto:FilesServer@yehudae.net)
 
+## Contributing
+Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
+
 ## License
 AGPL-3.0
+
+## P.S.
+Currently the project works with Apache without adding configurations, for Nginx you have to configure things on your own.
