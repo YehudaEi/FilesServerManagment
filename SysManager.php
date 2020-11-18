@@ -308,15 +308,11 @@ if(isset($act) && $isLogged){
         
         if(isset($_FILES["fileToUpload"]) && count($_FILES["fileToUpload"]["size"]) > 0){
             if(is_dir($file)){
-                if(isset($_POST['secret']))
-                    $targetDir = __DIR__ . DS . "p-f" . DS;
-                else{
-                    if(is_dir(($secretMode ? BASE_PATH_SF : BASE_PATH) . cleanPath($_POST['dir']))){
-                        $targetDir = ($secretMode ? BASE_PATH_SF : BASE_PATH) . cleanPath($_POST['dir']);
-                    }
-                    else
-                        $targetDir = $file;
+                if(is_dir(($secretMode ? BASE_PATH_SF : BASE_PATH) . cleanPath($_POST['dir']))){
+                    $targetDir = ($secretMode ? BASE_PATH_SF : BASE_PATH) . cleanPath($_POST['dir']);
                 }
+                else
+                    $targetDir = $file;
 
                 $targetDir = realpath($targetDir) . DS;
                 $override = $_POST['override'] ?? false;
@@ -346,9 +342,7 @@ if(isset($act) && $isLogged){
             printHtmlHeadAndFoobar(1, null, "Upload files in \"" . htmlspecialchars(getFakePath($name, $secretMode)) . "\"");
             printHeader(getFakePath($file, $secretMode), $secretMode);
             echo '<form method="post" enctype="multipart/form-data">
-                    <script>function dis(event){dir=document.getElementById("dir");dir.disabled=event.checked;}</script>
                     <input type="file" name="fileToUpload[]" id="fileToUpload" multiple="multiple"><br><br>
-                    <input type="checkbox" name="secret" id="secret" onclick="dis(this)"><label for="secret">secret dir</label><br><br>
                     <input type="checkbox" name="override" id="override"><label for="override">Override</label><br><br>
                     dir: <input type="text" name="dir" id="dir" value="'.htmlspecialchars(getFakePath($name, $secretMode)).'"><br><br>
                     <input type="submit" value="Upload" name="submit">
