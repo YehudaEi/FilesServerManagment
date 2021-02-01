@@ -264,7 +264,7 @@ if(isset($_GET['login'])){
 }
 
 $act = $_GET['act'] ?? null;
-$secretMode = $isLogged && ($_SESSION['secretMode'] ? true : false);
+$secretMode = $isLogged && ((isset($_SESSION['secretMode']) && $_SESSION['secretMode']) ? true : false);
 
 if(isset($act) && $isLogged){
     if($act == "folder"){
